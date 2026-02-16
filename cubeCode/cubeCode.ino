@@ -1,6 +1,8 @@
 #define BLINKY_DIAG         0
-#define COMM_LED_PIN       LED_BUILTIN
+#define CUBE_DIAG           0
+#define COMM_LED_PIN       16
 #define RST_BUTTON_PIN     15
+#define GEIGER_PIN         20
 #include <BlinkyPicoW.h>
 
 struct CubeSetting
@@ -18,9 +20,6 @@ struct CubeReading
 };
 CubeReading reading;
 
-int geigerPin = 20;
-int LEDPin = 16;
-volatile boolean ledState = false;
 volatile boolean newCount = false;
 volatile unsigned long countTime;
 unsigned long lastCountTime;
@@ -45,22 +44,20 @@ void setupBlinky()
 
 void setupCube()
 {
-  pinMode(geigerPin, INPUT);
-  pinMode(LEDPin, OUTPUT);
+  pinMode(GEIGER_PIN, INPUT);
   setting.publishInterval = 3000;
   setting.nsamples = 10;
   oldNsamples = setting.nsamples;
   reading.lastInterval = 0.1;
   reading.avgInterval = 0.1;
   reading.cpm = 0.1;
-  ledState = false;
   newCount = false;
-  avgInterval = -1.0
+  avgInterval = -1.0;
 
   lastPublishTime = millis(); 
   lastCountTime = lastPublishTime;
   countTime = lastPublishTime;
-  attachInterrupt(digitalPinToInterrupt(geigerPin), geiger, FALLING);
+  attachInterrupt(digitalPinToInterrupt(GEIGER_PIN), geiger, FALLING);
 }
 void loopCube()
 {
@@ -84,14 +81,6 @@ void loopCube()
     }
     lastCountTime = countTime;
   }
-  if (ledState)
-  {
-    if ((now - countTime) > 50)
-    {
-      ledState = false;
-      digitalWrite(LEDPin, LOW); 
-    }
-  }
   if ((now - lastPublishTime) > setting.publishInterval)
   {
     lastPublishTime = now;
@@ -110,7 +99,5 @@ void loopCube()
 void geiger() 
 {
   newCount = true;
-  ledState = true;
   countTime = millis();
-  digitalWrite(LEDPin, HIGH);   
 }
