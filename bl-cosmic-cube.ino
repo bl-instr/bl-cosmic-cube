@@ -55,7 +55,7 @@ void setupCube()
   reading.cpm = 0.1;
   ledState = false;
   newCount = false;
-  avgInterval = -1.0
+  avgInterval = -1.0;
 
   lastPublishTime = millis(); 
   lastCountTime = lastPublishTime;
