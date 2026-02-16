@@ -22,8 +22,8 @@ int geigerPin = 20;
 int LEDPin = 16;
 volatile boolean ledState = false;
 volatile boolean newCount = false;
-volatile unsigned long countTime = -1;
-unsigned long lastCountTime = -1;
+volatile unsigned long countTime;
+unsigned long lastCountTime;
 float avgInterval = -1.0;
 uint16_t oldNsamples = 10;
 
@@ -38,6 +38,7 @@ void setupBlinky()
   BlinkyPicoW.setMqttPort(1883);
   BlinkyPicoW.setMqttLedFlashMs(100);
   BlinkyPicoW.setHdwrWatchdogMs(8000);
+  BlinkyPicoW.setRouterDelay(10000);
 
   BlinkyPicoW.begin(BLINKY_DIAG, COMM_LED_PIN, RST_BUTTON_PIN, true, sizeof(setting), sizeof(reading));
 }
@@ -52,8 +53,13 @@ void setupCube()
   reading.lastInterval = 0.1;
   reading.avgInterval = 0.1;
   reading.cpm = 0.1;
+  ledState = false;
+  newCount = false;
+  avgInterval = -1.0
 
   lastPublishTime = millis(); 
+  lastCountTime = lastPublishTime;
+  countTime = lastPublishTime;
   attachInterrupt(digitalPinToInterrupt(geigerPin), geiger, FALLING);
 }
 void loopCube()
