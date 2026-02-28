@@ -30,7 +30,24 @@ unsigned long lastPublishTime;
 
 void setupBlinky()
 {
-  if (BLINKY_DIAG > 0) Serial.begin(9600);
+  if ((BLINKY_DIAG > 0) || (CUBE_DIAG > 0))
+  {
+    Serial.begin(9600);
+    delay(5000);
+  }
+  
+  boolean  useFlashStorage = true;
+/**/  
+  BlinkyPicoW.setSsid("blinkybox-demo");
+  BlinkyPicoW.setWifiPassword("blinky-lite");
+  BlinkyPicoW.setMqttServer("192.168.4.1");
+  BlinkyPicoW.setMqttUsername("blinkybox-demo");
+  BlinkyPicoW.setMqttPassword("areallybadpassword");
+  BlinkyPicoW.setBox("blinkybox-demo");
+  BlinkyPicoW.setTrayType("picoW");
+  BlinkyPicoW.setTrayName("bl-cosmic-8d-cd");
+  BlinkyPicoW.setCubeType("cube");
+/**/ 
 
   BlinkyPicoW.setMqttKeepAlive(15);
   BlinkyPicoW.setMqttSocketTimeout(4);
@@ -39,7 +56,7 @@ void setupBlinky()
   BlinkyPicoW.setHdwrWatchdogMs(8000);
   BlinkyPicoW.setRouterDelay(10000);
 
-  BlinkyPicoW.begin(BLINKY_DIAG, COMM_LED_PIN, RST_BUTTON_PIN, true, sizeof(setting), sizeof(reading));
+  BlinkyPicoW.begin(BLINKY_DIAG, COMM_LED_PIN, RST_BUTTON_PIN, useFlashStorage, sizeof(setting), sizeof(reading));
 }
 
 void setupCube()
@@ -80,13 +97,20 @@ void loopCube()
       reading.cpm = 60.0 / reading.avgInterval;
     }
     lastCountTime = countTime;
+    if (setting.publishInterval == 0)
+    {
+      lastPublishTime = now;
+      boolean successful = BlinkyPicoW.publishCubeData((uint8_t*) &setting, (uint8_t*) &reading, false);
+    }
   }
-  if ((now - lastPublishTime) > setting.publishInterval)
+  if (setting.publishInterval > 0)
   {
-    lastPublishTime = now;
-    boolean successful = BlinkyPicoW.publishCubeData((uint8_t*) &setting, (uint8_t*) &reading, false);
+    if ((now - lastPublishTime) > setting.publishInterval)
+    {
+      lastPublishTime = now;
+      boolean successful = BlinkyPicoW.publishCubeData((uint8_t*) &setting, (uint8_t*) &reading, false);
+    }
   }
-
   if (BlinkyPicoW.retrieveCubeSetting((uint8_t*) &setting))
   {
     if (oldNsamples != setting.nsamples)
